@@ -1,11 +1,4 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
+
 
 library(shiny)
 library(shinydashboard)
@@ -42,16 +35,27 @@ ui <- fluidPage(
     							 	# Sidebar for inputing patient characteristics
     							 	source(file.path("ui", "ui_input_aorta.R"))$value,
     							 	
-    							  # Display calculated probability
+    							  # Display calculated probabilities
     							  mainPanel(
     							  	fluidRow(
     							  		column(width = 4,
-    							  					 infoBoxOutput("aaa_mort_30_Box", width=12)
-    							  		)
+    							  					 infoBoxOutput("evar_mort_30_Box", width=12)),
+    							  		column(width = 4,
+    							  					 infoBoxOutput("iraaa_mort_30_Box", width=12)),
+    							  		column(width = 4,
+    							  					 infoBoxOutput("sraaa_mort_30_Box", width=12))
     							  	)
     							  )
     							 )
-    			 )
+    			 ),
+    			 # Panel for About
+    			 tabPanel("About", fluid = TRUE,
+    			 				 print("This app is a collaborative effort to aggregate published risk models into an interface
+    			 				 			for busy active clinicians.  This is a decision aide and is not intended to supercede clinician
+    			 				 			or patient preference.  All models are wrong but some are useful.  For questions, comments or
+    			 				 			suggestions please visit the github page: "),
+    			 				 a(href="https://github.com/adam-mdmph/vascalc",
+    			 				 	"adam_mdmph/vascalc", target="_blank"),br())
     		 )
        )
 
