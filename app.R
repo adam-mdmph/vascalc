@@ -14,64 +14,51 @@ library(dplyr)
 # Define UI for application that draws a histogram
 ui <- fluidPage(
 
-    # Application title
-    titlePanel("Survival Predication after revascularization for patients with CLTI"),
+      # Navbar structure
+        navbarPage("VasCalc",
+    	    
+        	#Panel for Peripheral Vascular Disease
+        	tabPanel("CLTI", fluid = TRUE,
+        					 
+        					 # Sidebar for inputing patient characteristics
+    				       sidebarLayout(
+    				       	source(file.path("ui", "ui_input_pvd.R"))$value,
+    					 				
+    				        # Display calculated probability
+    					      mainPanel(
+    					      	fluidRow(
+    					      		column(width = 4,
+    					      					 print("testing")
+    					      		)
+    				          )
+    					      )
+    		          )
+        	),
+    			#Panel for Aortic Aneurysm
+    			tabPanel("Aortic Aneurysm", fluid = TRUE,
+    							 sidebarLayout(
+    							 	
+    							 	
+    							 	# Sidebar for inputing patient characteristics
+    							 	source(file.path("ui", "ui_input_aorta.R"))$value,
+    							 	
+    							  # Display calculated probability
+    							  mainPanel(
+    							  	fluidRow(
+    							  		column(width = 4,
+    							  					 infoBoxOutput("aaa_mort_30_Box", width=12)
+    							  		)
+    							  	)
+    							  )
+    							 )
+    			 )
+    		 )
+       )
 
-    # Sidebar with a slider input for number of bins 
-    sidebarLayout(
-        sidebarPanel(
-            radioButtons("age", "Patient Age", 
-            						 choices = list("<60 Years" = 0,
-            						 							 "60-70 Years" = 1,
-            						 							 "71-80 Years" = 2,
-            						 							 ">80 Years" = 3)),
-            radioButtons("race", "Patient Race",
-            						 choices = list("White" = 0,
-            						 							 "Non-white" = 1)),
-            radioButtons("indication", "Indication for Procedure",
-            						 choices = list("Rest pain" = 0,
-            						 							 "Tissue loss" = 1)),
-            radioButtons("tob", "Smoking History",
-            						 choices = list("Prior History" = 1,
-            						 							 "Current" = 2)),
-            radioButtons("cad", "History of coronary artery disease",
-            						 choices = list("None" = 0,
-            						 							 "History of MI, asymptomatic or stable angina" = 1,
-            						 							 "Unstable angina/MI within 6 months" = 2)),
-            radioButtons("chf", "Congestive Heart Failure",
-            						 choices = list("No" = 0,
-            						 							 "Yes" = 1)),
-            radioButtons("copd", "COPD",
-            						 choices = list("None" = 0,
-            						 							 "Not treated or on medication" = 1,
-            						 							 "Home oxygen" = 2)),
-            radioButtons("ckd", "Chronic kidney disease stage",
-            						choices = list("1 (GFR >90 mL/min/1.73 m2)" = 0,
-            													 "2 (GFR 60-89 mL/min/1.73 m2)" = 1,
-            													 "3 (GFR 30-59 mL/min/1.73 m2)" = 2,
-            													 "4 (GFR 15-29 mL/min/1.73 m2)" = 3,
-            													 "5 (GFR <15 mL/min/1.73 m2)" = 4)),
-            radioButtons("amb", "Ambulation Status",
-            						 choices = list("Independent" = 0,
-            						 							 "With Assistance" = 1,
-            						 							 "Wheelchair bound" = 2,
-            						 							 "Bedbound" = 3)),
-            radioButtons("statin", "Pre-opreative medications: Statin",
-            						 choices = list("No" = 0,
-            						 							 "Yes" = 1))
-        ),
-
-       #Display calculated probability
-        mainPanel(
-           textOutput("mort30"),
-           print("“Survival Prediction in Patients with Chronic Limb-Threatening Ischemia Who Undergo Infrainguinal Revascularization | Elsevier Enhanced Reader.” Accessed December 20, 2021. https://doi.org/10.1016/j.ejvs.2019.04.009.
-")
-        )
-    )
-)
+        
 
 # Define server logic to calculate risk score
-server <- function(input, output) {
+server <- function(input, output, session) {
 	
 	clti_mort_30 = reactive({
 		age_1 = ifelse(input$age == 1, 1, 0)
@@ -99,14 +86,20 @@ server <- function(input, output) {
 			chf_1*0.53 + copd_1*0.27 + copd_2*0.86 + ckd_1*-0.05 + ckd_2*0.26 + ckd_3*0.76 + ckd_4*1.45 + amb_1*0.41 + 
 			amb_2*0.60 + amb_3*1.34 + statin_1*-0.29
 		clti_mort_30 = round(
-			(100/(1+2.71^-term)),
+			100/(1+exp(-term)),
 			0)
-		return(list(clti_mort_30))
+		return(list(clti_mort_30, "Simms et al"))
 	})
-
-	output$mort30 <- renderText({
-		clti_mort_30()[[1]]
+	
+	output$clti_mort_30_Box <- renderInfoBox({
+		infoBox(
+			"30 Day Mortality", h1(clti_mort_30()[[1]]), clti_mort_30()[[2]], icon = icon("bar-chart"),
+			color = "aqua", fill=TRUE
+		)
 	})
+	
+	# Calculate AAA 30 day mortality
+	source(file.path("server", "serv_aaa_mort.R"), local = TRUE)$value
   
 }
 
