@@ -37,6 +37,7 @@ ui <- fluidPage(
     							 	
     							  # Display calculated probabilities
     							  mainPanel(
+    							  	
     							  	fluidRow(
     							  		column(width = 4,
     							  					 infoBoxOutput("evar_mort_30_Box", width=12)),
@@ -51,7 +52,7 @@ ui <- fluidPage(
     			 # Panel for About
     			 tabPanel("About", fluid = TRUE,
     			 				 print("This app is a collaborative effort to aggregate published risk models into an interface
-    			 				 			for busy active clinicians.  This is a decision aide and is not intended to supercede clinician
+    			 				 			for busy active clinicians.  This is a decision aide and is not intended to supersede clinician
     			 				 			or patient preference.  All models are wrong but some are useful.  For questions, comments or
     			 				 			suggestions please visit the github page: "),
     			 				 a(href="https://github.com/adam-mdmph/vascalc",
