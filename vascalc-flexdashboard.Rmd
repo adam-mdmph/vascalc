@@ -71,11 +71,17 @@ renderValueBox({
   valueBox(
     value = rupture_risk(),
     icon = "fa-bomb",
-    color = "orange"
+    color = ifelse(input$diam_a < 40, "green",
+												ifelse(input$diam_a < 50, "green",
+															 ifelse(input$diam_a < 60, "orange", "red")))
   )
 })
 ```
 
+Row
+--------------------------------------------------------------------------------
+
+Chaikof, Elliot L., Ronald L. Dalman, Mark K. Eskandari, Benjamin M. Jackson, W. Anthony Lee, M. Ashraf Mansour, Tara M. Mastracci, et al. “The Society for Vascular Surgery Practice Guidelines on the Care of Patients with an Abdominal Aortic Aneurysm.” Journal of Vascular Surgery 67, no. 1 (January 2018): 2-77.e2. https://doi.org/10.1016/j.jvs.2017.10.044.
 
 Row
 -----------------------------------------------
@@ -101,11 +107,13 @@ evar_mort_30 = reactive({
 })
 
 renderValueBox({
-  evar_mort_30 <- formatC(evar_mort_30(), digits = 2, format = "f")
+  evar_mort_30 <- formatC(evar_mort_30(), digits = 1, format = "f")
+  evar_mort_30_numb <- as.numeric(evar_mort_30())
   valueBox(
     value = evar_mort_30,
     icon = "fa-syringe",
-    color = if (evar_mort_30 > 5) "warning" else "primary"
+    color = ifelse(evar_mort_30_numb > 10, "red", 
+    							 ifelse(evar_mort_30_numb > 5, "orange", "green"))
   )
 })
 ```
@@ -131,11 +139,13 @@ iraaa_mort_30 = reactive({
 })
 
 renderValueBox({
-  iraaa_mort_30 <- formatC(iraaa_mort_30(), digits = 2, format = "f")
+  iraaa_mort_30 <- formatC(iraaa_mort_30(), digits = 1, format = "f")
+  iraaa_mort_30_numb <- as.numeric(iraaa_mort_30())
   valueBox(
     value = iraaa_mort_30,
     icon = "fa-user-ninja",
-    color = if (iraaa_mort_30 > 5) "warning" else "primary"
+    color = ifelse(iraaa_mort_30_numb < 5, "green", 
+    							 ifelse(iraaa_mort_30_numb < 10, "orange", "red"))
   )
 })
 ```
@@ -161,14 +171,21 @@ sraaa_mort_30 = reactive({
 })
 
 renderValueBox({
-  sraaa_mort_30 <- formatC(sraaa_mort_30(), digits = 2, format = "f")
+  sraaa_mort_30 <- formatC(sraaa_mort_30(), digits = 1, format = "f")
+  sraaa_mort_30_numb <- as.numeric(sraaa_mort_30())
   valueBox(
     value = sraaa_mort_30,
     icon = "fa-user-ninja",
-    color = if (sraaa_mort_30 > 5) "warning" else "primary"
+    color = ifelse(sraaa_mort_30_numb > 10, "red", 
+    							 ifelse(sraaa_mort_30_numb > 5, "orange", "green"))
   )
 })
 ```
+
+Row
+-------------------------------------------------------------------------------
+Eslami, Mohammad H., Denis Rybin, Gheorghe Doros, Jeffrey A. Kalish, and Alik Farber. “Comparison of a Vascular Study Group of New England Risk Prediction Model with Established Risk Prediction Models of In-Hospital Mortality after Elective Abdominal Aortic Aneurysm Repair.” Journal of Vascular Surgery 62, no. 5 (November 2015): 1125-1133.e2. https://doi.org/10.1016/j.jvs.2015.06.051.
+
 
 CLTI
 ===============================================================================
@@ -220,6 +237,8 @@ radioButtons("statin_p", "Pre-opreative medications: Statin",
 
 Row
 ----------------------------------------------------------
+
+
 
 About
 ==============================================================================
