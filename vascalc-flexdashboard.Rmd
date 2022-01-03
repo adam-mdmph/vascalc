@@ -10,45 +10,53 @@ runtime: shiny
 ```{r setup, include=FALSE}
 library(flexdashboard)
 library(dplyr)
+library(scales)
 ```
 
-AAA
+eAAA
 =======================================================================
 
 Inputs {.sidebar}
 -----------------------------------------------------------------------
 
-### Patient Detials
 
 ```{r}
-
 sliderInput("age_a", "Patient Age", min = 18, max = 90, value = 45)
-radioButtons("sex_a", "Patient Sex",
+selectInput("sex_a", "Patient Sex",
  						 choices = list("Male" = 0,
  						 							 "Female" = 1))
-radioButtons("race_a", "Patient Race",
-  						 choices = list("White" =     0,
-						 							    "Non-white" = 1))
-radioButtons("indication_a", "Indication for Procedure",
-	  					 choices = list("Asymptomatic" =   0,
-		  				 							  "Symptomatic" = 1,
-	  					 							  "Ruptured" = 2))
 sliderInput("diam_a", "Maximal Aorta Diameter", min = 30, max = 100, value = 55)
-radioButtons("cad_a", "History of coronary artery disease",
+selectInput("renalclamp_a", "Suprarenal clamp?",
+						 choices = list("Unlikely" = 0,
+						 							 "Likely" = 1))
+selectInput("cad_a", "History of coronary artery disease",
   						 choices = list("None" =                                         0,
   						 							 "History of MI, asymptomatic or stable angina" = 1,
   						 							 "Unstable angina/MI within 6 months" =           2))
-radioButtons("cvd_a", "Cerebrovascular Disease",
+selectInput("chf_a", "Congestive Heart Failure",
+  						 choices = list("None" =  0,
+	  					 						    "Asymptomatic" = 1,
+  						 							 "Symptomatic" = 2))
+selectInput("stress_a", "Stress Test",
+						 choices = list ("Not Performed" = 0,
+						 								"Normal" = 1,
+						 								"Abnormal" = 2))
+selectInput("cvd_a", "Cerebrovascular Disease",
   						 choices = list("No" =  0,
 	  					 						    "Yes" = 1))
-radioButtons("copd_a", "COPD",
+selectInput("copd_a", "COPD",
 			  			 choices = list("None" =                         0,
 			  			 						    "Not treated or on medication" = 1,
 			  			 						    "Home oxygen" =                  2))
-radioButtons("ckd_a", "Chronic kidney disease stage",
-			  			 choices = list("Cr <1.5" =  0,
-						 							    "Cr 1.5-2" = 1,
-						 							    "Cr >2" =    2))
+selectInput("dm_a", "Diabetes",
+						 choices = list("None" = 0,
+						 							 "Diet Controlled" = 1,
+						 							 "Noninsulin Medication" = 2,
+						 							 "Insulin Dependent" = 3))
+selectInput("esrd_a", "ESRD on Dialysis",
+						 choices = list("No" = 0,
+						 							 "Yes" = 1))
+sliderInput("ckd_a", "Creatinine (mg/dL), not on dialysis", min = 0.5, max = 4.0, value = 1.0)
 ```
 
 
@@ -59,11 +67,10 @@ Row
 
 ```{r}
 rupture_risk = reactive({
-	rupture_risk = ifelse(input$diam_a < 40, "Minimal",
-												ifelse(input$diam_a < 50, "1%",
-															 ifelse(input$diam_a < 60, "5-10%",
-															 			 ifelse(input$diam_a < 70, "10-20%",
-															 			 			 ifelse(input$diam_a < 80, "20-40%", "30-50%")))))
+	rupture_risk = ifelse(input$diam_a < 40, "0.3%",
+												ifelse(input$diam_a < 50, "0.5-1.5%",
+															 ifelse(input$diam_a < 60, "1-11%",
+															 			 ifelse(input$diam_a < 70, "11-22%", ">30%"))))
 	return(rupture_risk)
 })
 
@@ -81,7 +88,7 @@ renderValueBox({
 Row
 --------------------------------------------------------------------------------
 
-Chaikof, Elliot L., Ronald L. Dalman, Mark K. Eskandari, Benjamin M. Jackson, W. Anthony Lee, M. Ashraf Mansour, Tara M. Mastracci, et al. “The Society for Vascular Surgery Practice Guidelines on the Care of Patients with an Abdominal Aortic Aneurysm.” Journal of Vascular Surgery 67, no. 1 (January 2018): 2-77.e2. https://doi.org/10.1016/j.jvs.2017.10.044.
+Tracci MC, Roy RR, Upchurch GR. "Aortoiliac Aneurysms: Evaluation, Decision Making, and Medical Management." Rutherford's Vascular Surgery and Endovascular Therapy. 9th Ed. Edited by Sidway AN and Perler BA. 2019.  Chapter 70, 884-893.e3
 
 Row
 -----------------------------------------------
@@ -95,89 +102,57 @@ evar_mort_30 = reactive({
 	cad_1 = ifelse(input$cad_a > 0, 1, 0)
 	cvd_1 = ifelse(input$cvd_a == 1, 1, 0)
 	copd_1 = ifelse(input$copd_a > 0, 1, 0)
-	ckd_1 = ifelse(input$ckd_a == 1, 1, 0)
-	ckd_2 = ifelse(input$ckd_a == 2, 1, 0)
+	ckd_1 = ifelse(input$ckd_a >= 1.5 & input$ckd_a <=2 & input$esrd_a == 0, 1, 0)
+	ckd_2 = ifelse(input$ckd_a > 2 | input$esrd_a == 1, 1, 0)
 	diam_1 = ifelse(input$diam_a > 65, 1, 0)
 	evar_term = -6.76 + 0.78*age_1 + 0.69*sex_1 + 0.56*cad_1 + 0.71*cvd_1 + 0.95*copd_1 + 
 		0.89*ckd_1 + 1.31*ckd_2 + 0.91*diam_1
 	evar_mort_30 = round(
-		100/(1+exp(-evar_term)),
-		2)
+		1/(1+exp(-evar_term)),
+		3)
 	return(evar_mort_30)
 })
 
 renderValueBox({
-  evar_mort_30 <- formatC(evar_mort_30(), digits = 1, format = "f")
   evar_mort_30_numb <- as.numeric(evar_mort_30())
   valueBox(
-    value = evar_mort_30,
+    value = scales::percent(evar_mort_30(), accuracy = 0.1),
     icon = "fa-syringe",
-    color = ifelse(evar_mort_30_numb > 10, "red", 
-    							 ifelse(evar_mort_30_numb > 5, "orange", "green"))
+    color = ifelse(evar_mort_30_numb > 0.1, "red", 
+    							 ifelse(evar_mort_30_numb > 0.05, "orange", "green"))
   )
 })
 ```
 
-### Open (Infrarenal Clamp) 30d Mortality
+### Open AAA 30d Mortality
 
 ```{r}
-iraaa_mort_30 = reactive({
+open_mort_30 = reactive({
 	age_1 = ifelse(input$age_a > 75, 1, 0)
 	sex_1 = ifelse(input$sex_a == 1, 1, 0)
 	cad_1 = ifelse(input$cad_a > 0, 1, 0)
 	cvd_1 = ifelse(input$cvd_a == 1, 1, 0)
 	copd_1 = ifelse(input$copd_a > 0, 1, 0)
-	ckd_1 = ifelse(input$ckd_a == 1, 1, 0)
-	ckd_2 = ifelse(input$ckd_a == 2, 1, 0)
+	ckd_1 = ifelse(input$ckd_a >= 1.5 & input$ckd_a <=2 & input$esrd_a == 0, 1, 0)
+	ckd_2 = ifelse(input$ckd_a > 2 | input$esrd_a == 1, 1, 0)
 	diam_1 = ifelse(input$diam_a == 1, 1, 0)
-	iraaa_term = -6.76 + 1.08 + 0.78*age_1 + 0.69*sex_1 + 0.56*cad_1 + 0.71*cvd_1 + 0.95*copd_1 + 
-		0.89*ckd_1 + 1.31*ckd_2 + 0.91*diam_1
-	iraaa_mort_30 = round(
-		100/(1+exp(-iraaa_term)),
-		2)
-	return(iraaa_mort_30)
+	renalclamp_1 = ifelse(input$renalclamp_a == 1, 1, 0)
+	renalclamp_2 = ifelse(input$renalclamp_a == 2, 1, 0)
+	open_term = -6.76 + 0.78*age_1 + 0.69*sex_1 + 0.56*cad_1 + 0.71*cvd_1 + 0.95*copd_1 + 
+		0.89*ckd_1 + 1.31*ckd_2 + 0.91*diam_1 + 1.08*renalclamp_1 + 1.905*renalclamp_2
+	open_mort_30 = round(
+		1/(1+exp(-open_term)),
+		3)
+	return(open_mort_30)
 })
 
 renderValueBox({
-  iraaa_mort_30 <- formatC(iraaa_mort_30(), digits = 1, format = "f")
-  iraaa_mort_30_numb <- as.numeric(iraaa_mort_30())
+  open_mort_30_numb <- as.numeric(open_mort_30())
   valueBox(
-    value = iraaa_mort_30,
+    value = scales::percent(open_mort_30(), accuracy = 0.1),
     icon = "fa-user-ninja",
-    color = ifelse(iraaa_mort_30_numb < 5, "green", 
-    							 ifelse(iraaa_mort_30_numb < 10, "orange", "red"))
-  )
-})
-```
-
-### Open (Supra-renal Clamp) 30d Mortality
-
-```{r}
-sraaa_mort_30 = reactive({
-	age_1 = ifelse(input$age_a > 75, 1, 0)
-	sex_1 = ifelse(input$sex_a == 1, 1, 0)
-	cad_1 = ifelse(input$cad_a > 0, 1, 0)
-	cvd_1 = ifelse(input$cvd_a == 1, 1, 0)
-	copd_1 = ifelse(input$copd_a > 0, 1, 0)
-	ckd_1 = ifelse(input$ckd_a == 1, 1, 0)
-	ckd_2 = ifelse(input$ckd_a == 2, 1, 0)
-	diam_1 = ifelse(input$diam_a == 1, 1, 0)
-	sraaa_term = -6.76 + 1.905 + 0.78*age_1 + 0.69*sex_1 + 0.56*cad_1 + 0.71*cvd_1 + 0.95*copd_1 + 
-		0.89*ckd_1 + 1.31*ckd_2 + 0.91*diam_1
-	sraaa_mort_30 = round(
-		100/(1+exp(-sraaa_term)),
-		2)
-	return(sraaa_mort_30)
-})
-
-renderValueBox({
-  sraaa_mort_30 <- formatC(sraaa_mort_30(), digits = 1, format = "f")
-  sraaa_mort_30_numb <- as.numeric(sraaa_mort_30())
-  valueBox(
-    value = sraaa_mort_30,
-    icon = "fa-user-ninja",
-    color = ifelse(sraaa_mort_30_numb > 10, "red", 
-    							 ifelse(sraaa_mort_30_numb > 5, "orange", "green"))
+    color = ifelse(open_mort_30_numb < 0.1, "green", 
+    							 ifelse(open_mort_30_numb < 0.05, "orange", "red"))
   )
 })
 ```
@@ -186,6 +161,92 @@ Row
 -------------------------------------------------------------------------------
 Eslami, Mohammad H., Denis Rybin, Gheorghe Doros, Jeffrey A. Kalish, and Alik Farber. “Comparison of a Vascular Study Group of New England Risk Prediction Model with Established Risk Prediction Models of In-Hospital Mortality after Elective Abdominal Aortic Aneurysm Repair.” Journal of Vascular Surgery 62, no. 5 (November 2015): 1125-1133.e2. https://doi.org/10.1016/j.jvs.2015.06.051.
 
+Row
+-------------------------------------------------------------------------------
+
+### EVAR POMI
+
+```{r}
+evar_pomi = reactive({
+	age_1 = ifelse(input$age_a >= 60 & input$age_a < 70, 1, 0)
+	age_2 = ifelse(input$age_a >= 70 & input$age_a < 80, 1, 0)
+	age_3 = ifelse(input$age_a >= 80, 1, 0)
+	ckd_1 = ifelse(input$ckd_a > 1.8 & input$esrd_a != 1, 1, 0)
+	ckd_2 = ifelse(input$esrd_a ==1, 1, 0)
+	stress_1 = ifelse(input$stress_a == 1, 1, 0)
+	stress_2 = ifelse(input$stress_a == 2, 1, 0)
+	cad_1 = ifelse(input$cad_a == 1, 1, 0)
+	cad_2 = ifelse(input$cad_a == 2, 1, 0)
+	dm_1 = ifelse(input$dm_a == 1, 1, 0)
+	dm_2 = ifelse(input$dm_a == 2, 1, 0)
+	dm_3 = ifelse(input$dm_a == 3, 1, 0)
+	chf_1 = ifelse(input$chf_a == 1, 1, 0)
+	chf_2 = ifelse(input$chf_a == 2, 1, 0)
+	evar_term = -5.82 + 0.17 + 0.44*age_1 + 0.64*age_2 + 1.10*age_3 + 0.76*ckd_1 + 0.64*ckd_2 + 
+	-0.15*stress_1 + 0.46*stress_2 + 0.40*cad_1 + 0.76*cad_2 + 0.18*dm_1 + 0.20*dm_2 + 0.39*dm_3 
+	0.44*chf_1 + 0.50*chf_2
+	evar_pomi = round(
+		1/(1+exp(-evar_term)),
+		3)
+	return(evar_pomi)
+})
+
+renderValueBox({
+  evar_pomi_numb <- as.numeric(evar_pomi())
+  valueBox(
+    value = scales::percent(evar_pomi(), accuracy = 0.1),
+     icon = "fa-heartbeat",
+    color = ifelse(evar_pomi_numb > 0.1, "red", 
+    							 ifelse(evar_pomi_numb > 0.05, "orange", "green"))
+  )
+})
+```
+
+### Open AAA POMI
+
+```{r}
+open_pomi = reactive({
+	age_1 = ifelse(input$age_a >= 60 & input$age_a < 70, 1, 0)
+	age_2 = ifelse(input$age_a >= 70 & input$age_a < 80, 1, 0)
+	age_3 = ifelse(input$age_a >= 80, 1, 0)
+	ckd_1 = ifelse(input$ckd_a > 1.8 & input$esrd_a != 1, 1, 0)
+	ckd_2 = ifelse(input$esrd_a == 1, 1, 0)
+	stress_1 = ifelse(input$stress_a == 1, 1, 0)
+	stress_2 = ifelse(input$stress_a == 2, 1, 0)
+	cad_1 = ifelse(input$cad_a == 1, 1, 0)
+	cad_2 = ifelse(input$cad_a == 2, 1, 0)
+	dm_1 = ifelse(input$dm_a == 1, 1, 0)
+	dm_2 = ifelse(input$dm_a == 2, 1, 0)
+	dm_3 = ifelse(input$dm_a == 3, 1, 0)
+	chf_1 = ifelse(input$chf_a == 1, 1, 0)
+	chf_2 = ifelse(input$chf_a == 2, 1, 0)
+	open_term = -5.82 + 1.91 + 0.44*age_1 + 0.64*age_2 + 1.10*age_3 + 0.76*ckd_1 + 0.64*ckd_2 + 
+	-0.15*stress_1 + 0.46*stress_2 + 0.40*cad_1 + 0.76*cad_2 + 0.18*dm_1 + 0.20*dm_2 + 0.39*dm_3 
+	0.44*chf_1 + 0.50*chf_2
+	open_pomi = round(
+		1/(1+exp(-open_term)),
+		3)
+	return(open_pomi)
+})
+
+renderValueBox({
+  open_pomi_numb <- as.numeric(open_pomi())
+  valueBox(
+    value = scales::percent(open_pomi(), accuracy = 0.1),
+     icon = "fa-heartbeat",
+    color = ifelse(open_pomi_numb > 0.1, "red", 
+    							 ifelse(open_pomi_numb > 0.05, "orange", "green"))
+  )
+})
+```
+
+Row
+-------------------------------------------------------------------------------
+
+Bertges, Daniel J., Dan Neal, Andres Schanzer, Salvatore T. Scali, Philip P. Goodney, Jens Eldrup-Jorgensen, and Jack L. Cronenwett. “The Vascular Quality Initiative Cardiac Risk Index for Prediction of Myocardial Infarction after Vascular Surgery.” Journal of Vascular Surgery 64, no. 5 (November 2016): 1411-1421.e4. https://doi.org/10.1016/j.jvs.2016.04.045.
+
+rAAA
+===============================================================================
 
 CLTI
 ===============================================================================
@@ -193,7 +254,7 @@ CLTI
 Inputs {.sidebar}
 -------------------------------------------------------------------------------
 
-### Patient Detials
+### Patient Details
 
 ```{r}
 
@@ -238,7 +299,166 @@ radioButtons("statin_p", "Pre-opreative medications: Statin",
 Row
 ----------------------------------------------------------
 
+Carotid
+==============================================================================
 
+Input {.sidebar}
+------------------------------------------------------------------------------
+
+### Patient Details
+
+```{r}
+sliderInput("age_c", "Patient Age", min = 18, max = 90, value = 45)
+selectInput("sex_c", "Patient Sex",
+ 						 choices = list("Male" = 0,
+ 						 							 "Female" = 1))
+selectInput("pres_c", "Primary Symptomatic Event",
+						choices = list("Asymptomatic" = 0,
+													 "Monocular" = 1,
+													 "Single Cerebral TIA" = 2,
+													 "Multiple Cerebral TIA" = 3,
+													 "Minor Stroke" = 4,
+													 "Major Disabling Stroke" = 5))
+sliderInput("time_c", "Time Since Last Event", min = 1, max = 180, value = 7)
+selectInput("sten_c", "Percent Stenosis",
+						choices = list("<50%" = 0,
+						              "50-59" = 1,
+													 "60-69%" = 2,
+													 "70-79%" = 3,
+													 "80-89%" = 4,
+													 "90-99%" = 5,
+													 "Near Occlusion" = 6,
+													 "Occluded" = 7))
+selectInput("ulc_c", "Ulcerated Plaque",
+						choices = list("No" = 0,
+													 "Yes" = 1))
+selectInput("htn_c", "Hypertension on medications",
+						choices = list("No" = 0,
+													 "Yes" = 1))
+selectInput("cad_c", "History of coronary artery disease",
+  						 choices = list("None" =                                         0,
+  						 							 "History of MI, asymptomatic or stable angina" = 1,
+  						 							 "Unstable angina/MI within 6 months" =           2))
+selectInput("chf_c", "Congestive Heart Failure",
+  						 choices = list("None" =  0,
+	  					 						    "Asymptomatic" = 1,
+  						 							 "Symptomatic" = 2))
+selectInput("stress_c", "Stress Test",
+						 choices = list ("Not Performed" = 0,
+						 								"Normal" = 1,
+						 								"Abnormal" = 2))
+selectInput("pvd_c", "Peripheral Vascular Disease",
+  						 choices = list("No" =  0,
+	  					 						    "Yes" = 1))
+selectInput("copd_c", "COPD",
+			  			 choices = list("None" =                         0,
+			  			 						    "Not treated or on medication" = 1,
+			  			 						    "Home oxygen" =                  2))
+selectInput("dm_c", "Diabetes",
+						 choices = list("None" = 0,
+						 							 "Diet Controlled" = 1,
+						 							 "Noninsulin Medication" = 2,
+						 							 "Insulin Dependent" = 3))
+selectInput("esrd_c", "ESRD on Dialysis",
+						 choices = list("No" = 0,
+						 							 "Yes" = 1))
+sliderInput("ckd_c", "Creatinine (mg/dL), not on dialysis", min = 0.5, max = 4.0, value = 1.0)
+```
+
+Row
+-------------------------------------------------------------------------------
+
+### 5-year risk of ipsilateral stroke (UNDER CONSTRUCTION)
+
+```{r}
+cva_5y = reactive({
+	sten_1 = as.numeric(ifelse(input$sten_c < 6, input$sten_c, 0))
+	nearocc_l = ifelse(input$sten_c == 6, 1, 0)
+	sex_1 = ifelse(input$sex_c == 0, 1, 0)
+	age_1 = as.numeric(input$age_c/10)
+	time_1 = as.numeric(input$time_c/7)
+	pres_1 = ifelse(input$pres_c == 2, 1, 0)
+	pres_2 = ifelse(input$pres_c == 3, 1, 0)
+	pres_3 = ifelse(input$pres_c == 4, 1, 0)
+	pres_4 = ifelse(input$pres_c == 5, 1, 0)
+	dm_1 = ifelse(input$dm_c > 0, 1, 0)
+	cad_1 = ifelse(input$cad_c > 0, 1, 0)
+	pvd_1 = ifelse(input$pvd_c == 1, 1, 0)
+	htn_1 = ifelse(input$htn_c == 1, 1, 0)
+	ulc_1 = ifelse(input$ulc_c == 1, 1, 0)
+	cva_5y_term = -3.55 + log(1.18)*sten_1 + log(0.49)*nearocc_l + log(1.19)*sex_1 + log(1.12)*age_1 +
+		log(0.96)*time_1 + log(1.41)*pres_1 + log(2.05)*pres_2 + log(1.82)*pres_3 + log(2.54)*pres_4 + log(1.35)*dm_1 +
+		log(1.57)*cad_1 + log(1.24)*htn_1 + log(2.03)*ulc_1
+	cva_5y = round(
+		1/(1+exp(-cva_5y_term)),
+		3)
+	return(cva_5y)
+})
+
+renderValueBox({
+  cva_5y_numb <- as.numeric(cva_5y())
+  cva_5y = ifelse(input$sten_c == 7 | input$pres_c == 0, "Unable to calculate", 
+    						scales::percent(cva_5y(), accuracy = 0.1))
+	valueBox(
+    value = cva_5y,
+     icon = "fa-plus-square",
+     color = ifelse(input$sten_c == 7 | input$pres_c == 0, "grey",
+     							 ifelse(cva_5y_numb > 0.2, "red", 
+     							 			 ifelse(cva_5y_numb > 0.1, "orange", "green")))
+  )
+})
+```
+
+Row
+-------------------------------------------------------------------------------
+
+Rothwell, P M, Z Mehta DPhil, S C Howard DPhil, S A Gutnikov DPhil, and C P Warlow FAcadSci. “From Subgroups to Individuals: General Principles and the Example of Carotid Endarterectomy” 365 (2005): 10.
+
+Row
+-------------------------------------------------------------------------------
+
+### CEA POMI
+
+```{r}
+cea_pomi = reactive({
+	age_1 = ifelse(input$age_c >= 60 & input$age_c < 70, 1, 0)
+	age_2 = ifelse(input$age_c >= 70 & input$age_c < 80, 1, 0)
+	age_3 = ifelse(input$age_c >= 80, 1, 0)
+	ckd_1 = ifelse(input$ckd_c > 1.8 & input$esrd_c != 1, 1, 0)
+	ckd_2 = ifelse(input$esrd_c == 1, 1, 0)
+	stress_1 = ifelse(input$stress_c == 1, 1, 0)
+	stress_2 = ifelse(input$stress_c == 2, 1, 0)
+	cad_1 = ifelse(input$cad_c == 1, 1, 0)
+	cad_2 = ifelse(input$cad_c == 2, 1, 0)
+	dm_1 = ifelse(input$dm_c == 1, 1, 0)
+	dm_2 = ifelse(input$dm_c == 2, 1, 0)
+	dm_3 = ifelse(input$dm_c == 3, 1, 0)
+	chf_1 = ifelse(input$chf_c == 1, 1, 0)
+	chf_2 = ifelse(input$chf_c == 2, 1, 0)
+	cea_term = -5.82 + 0.44*age_1 + 0.64*age_2 + 1.10*age_3 + 0.76*ckd_1 + 0.64*ckd_2 + 
+	-0.15*stress_1 + 0.46*stress_2 + 0.40*cad_1 + 0.76*cad_2 + 0.18*dm_1 + 0.20*dm_2 + 0.39*dm_3 
+	0.44*chf_1 + 0.50*chf_2
+	cea_pomi = round(
+		1/(1+exp(-cea_term)),
+		3)
+	return(cea_pomi)
+})
+
+renderValueBox({
+  cea_pomi_numb <- as.numeric(cea_pomi())
+  valueBox(
+    value = scales::percent(cea_pomi(), accuracy = 0.1),
+     icon = "fa-heartbeat",
+    color = ifelse(cea_pomi_numb > 0.1, "red", 
+    							 ifelse(cea_pomi_numb > 0.05, "orange", "green"))
+  )
+})
+```
+
+Row
+-------------------------------------------------------------------------------
+
+Bertges, Daniel J., Dan Neal, Andres Schanzer, Salvatore T. Scali, Philip P. Goodney, Jens Eldrup-Jorgensen, and Jack L. Cronenwett. “The Vascular Quality Initiative Cardiac Risk Index for Prediction of Myocardial Infarction after Vascular Surgery.” Journal of Vascular Surgery 64, no. 5 (November 2016): 1411-1421.e4. https://doi.org/10.1016/j.jvs.2016.04.045.
 
 About
 ==============================================================================
