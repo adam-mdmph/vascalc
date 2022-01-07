@@ -60,6 +60,7 @@ selectInput("esrd_a", "ESRD on Dialysis",
 sliderInput("cr_a", "Creatinine (mg/dL), not on dialysis", min = 0.5, max = 4.0, value = 1.0)
 ```
 
+[More Guidance about Input Variables](https://adam-mdmph.github.io/Risk-Prediction-Text/aaa.html#input-variables)
 
 Row
 ----------------------------------------------
