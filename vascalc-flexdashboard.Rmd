@@ -11,6 +11,7 @@ runtime: shiny
 library(flexdashboard)
 library(dplyr)
 library(scales)
+library(kidney.epi)
 ```
 
 eAAA
@@ -56,7 +57,7 @@ selectInput("dm_a", "Diabetes",
 selectInput("esrd_a", "ESRD on Dialysis",
 						 choices = list("No" = 0,
 						 							 "Yes" = 1))
-sliderInput("ckd_a", "Creatinine (mg/dL), not on dialysis", min = 0.5, max = 4.0, value = 1.0)
+sliderInput("cr_a", "Creatinine (mg/dL), not on dialysis", min = 0.5, max = 4.0, value = 1.0)
 ```
 
 
@@ -102,8 +103,8 @@ evar_mort_30 = reactive({
 	cad_1 = ifelse(input$cad_a > 0, 1, 0)
 	cvd_1 = ifelse(input$cvd_a == 1, 1, 0)
 	copd_1 = ifelse(input$copd_a > 0, 1, 0)
-	ckd_1 = ifelse(input$ckd_a >= 1.5 & input$ckd_a <=2 & input$esrd_a == 0, 1, 0)
-	ckd_2 = ifelse(input$ckd_a > 2 | input$esrd_a == 1, 1, 0)
+	ckd_1 = ifelse(input$cr_a >= 1.5 & input$cr_a <=2 & input$esrd_a == 0, 1, 0)
+	ckd_2 = ifelse(input$cr_a > 2 | input$esrd_a == 1, 1, 0)
 	diam_1 = ifelse(input$diam_a > 65, 1, 0)
 	evar_term = -6.76 + 0.78*age_1 + 0.69*sex_1 + 0.56*cad_1 + 0.71*cvd_1 + 0.95*copd_1 + 
 		0.89*ckd_1 + 1.31*ckd_2 + 0.91*diam_1
@@ -133,8 +134,8 @@ open_mort_30 = reactive({
 	cad_1 = ifelse(input$cad_a > 0, 1, 0)
 	cvd_1 = ifelse(input$cvd_a == 1, 1, 0)
 	copd_1 = ifelse(input$copd_a > 0, 1, 0)
-	ckd_1 = ifelse(input$ckd_a >= 1.5 & input$ckd_a <=2 & input$esrd_a == 0, 1, 0)
-	ckd_2 = ifelse(input$ckd_a > 2 | input$esrd_a == 1, 1, 0)
+	ckd_1 = ifelse(input$cr_a >= 1.5 & input$cr_a <=2 & input$esrd_a == 0, 1, 0)
+	ckd_2 = ifelse(input$cr_a > 2 | input$esrd_a == 1, 1, 0)
 	diam_1 = ifelse(input$diam_a == 1, 1, 0)
 	renalclamp_1 = ifelse(input$renalclamp_a == 1, 1, 0)
 	renalclamp_2 = ifelse(input$renalclamp_a == 2, 1, 0)
@@ -171,7 +172,7 @@ evar_pomi = reactive({
 	age_1 = ifelse(input$age_a >= 60 & input$age_a < 70, 1, 0)
 	age_2 = ifelse(input$age_a >= 70 & input$age_a < 80, 1, 0)
 	age_3 = ifelse(input$age_a >= 80, 1, 0)
-	ckd_1 = ifelse(input$ckd_a > 1.8 & input$esrd_a != 1, 1, 0)
+	ckd_1 = ifelse(input$cr_a > 1.8 & input$esrd_a != 1, 1, 0)
 	ckd_2 = ifelse(input$esrd_a ==1, 1, 0)
 	stress_1 = ifelse(input$stress_a == 1, 1, 0)
 	stress_2 = ifelse(input$stress_a == 2, 1, 0)
@@ -209,7 +210,7 @@ open_pomi = reactive({
 	age_1 = ifelse(input$age_a >= 60 & input$age_a < 70, 1, 0)
 	age_2 = ifelse(input$age_a >= 70 & input$age_a < 80, 1, 0)
 	age_3 = ifelse(input$age_a >= 80, 1, 0)
-	ckd_1 = ifelse(input$ckd_a > 1.8 & input$esrd_a != 1, 1, 0)
+	ckd_1 = ifelse(input$cr_a > 1.8 & input$esrd_a != 1, 1, 0)
 	ckd_2 = ifelse(input$esrd_a == 1, 1, 0)
 	stress_1 = ifelse(input$stress_a == 1, 1, 0)
 	stress_2 = ifelse(input$stress_a == 2, 1, 0)
@@ -245,9 +246,6 @@ Row
 
 Bertges, Daniel J., Dan Neal, Andres Schanzer, Salvatore T. Scali, Philip P. Goodney, Jens Eldrup-Jorgensen, and Jack L. Cronenwett. “The Vascular Quality Initiative Cardiac Risk Index for Prediction of Myocardial Infarction after Vascular Surgery.” Journal of Vascular Surgery 64, no. 5 (November 2016): 1411-1421.e4. https://doi.org/10.1016/j.jvs.2016.04.045.
 
-rAAA
-===============================================================================
-
 CLTI
 ===============================================================================
 
@@ -257,47 +255,227 @@ Inputs {.sidebar}
 ### Patient Details
 
 ```{r}
-
-radioButtons("age_p", "Patient Age", 
-						   choices = list("<60 Years" =   0,
-						 	  						  "60-70 Years" = 1,
-						 		  					  "71-80 Years" = 2,
-						 			  				  ">80 Years" =   3))
-radioButtons("race_p", "Patient Race",
+sliderInput("age_p", "Patient Age", min = 18, max = 90, value = 45)
+selectInput("sex_p", "Patient Sex",
+ 						 choices = list("Male" = 0,
+ 						 							 "Female" = 1))
+selectInput("race_p", "Patient Race",
   						 choices = list("White" =     0,
-						 							    "Non-white" = 1))
-radioButtons("indication_p", "Indication for Procedure",
+  						 							 "Black" = 1,
+						 							    "Not white or black" = 2))
+selectInput("indication_p", "Indication for Procedure",
 	  					 choices = list("Rest pain" =   0,
 		  				 							  "Tissue loss" = 1))
-radioButtons("cad_p", "History of coronary artery disease",
+selectInput("dzlevel_p", "Level of Disease Requiring Treatment",
+						choices = list("Aortoiliac" = 1,
+													 "Femoropopliteal" = 2,
+													 "Tibial" = 3),
+						multiple = TRUE)
+selectInput("cad_p", "History of coronary artery disease",
 				   		 choices = list("None" =                                         0,
 		  				 						    "History of MI, asymptomatic or stable angina" = 1,
 	  					 							  "Unstable angina/MI within 6 months" =           2))
-radioButtons("chf_p", "Congestive Heart Failure",
+selectInput("chf_p", "Congestive Heart Failure",
   						 choices = list("No" =  0,
 	  					 						    "Yes" = 1))
-radioButtons("copd_p", "COPD",
+selectInput("stress_p", "Stress Test",
+						 choices = list ("Not Performed" = 0,
+						 								"Normal" = 1,
+						 								"Abnormal" = 2))
+selectInput("copd_p", "COPD",
 			  			 choices = list("None" =                         0,
 			  			 						    "Not treated or on medication" = 1,
 			  			 						    "Home oxygen" =                  2))
-radioButtons("ckd_p", "Chronic kidney disease stage",
-			  			 choices = list("1 (GFR >90 mL/min/1.73 m2)" =    0,
-						 							    "2 (GFR 60-89 mL/min/1.73 m2)" =  1,
-						 							    "3 (GFR 30-59 mL/min/1.73 m2)" =  2,
-						 						      "4 (GFR 15-29 mL/min/1.73 m2)" =  3,
-						 						      "5 (GFR <15 mL/min/1.73 m2)" =    4))
-radioButtons("ambulation_p", "Ambulation Status",
+selectInput("tob_p", "Smoking Status",
+						choices = list("None" = 0,
+													 "Prior History" = 1,
+													 "Current" = 2))
+selectInput("dm_p", "Diabetes",
+						 choices = list("None" = 0,
+						 							 "Diet Controlled" = 1,
+						 							 "Noninsulin Medication" = 2,
+						 							 "Insulin Dependent" = 3))
+selectInput("esrd_p", "ESRD on Dialysis",
+						 choices = list("No" = 0,
+						 							 "Yes" = 1))
+sliderInput("cr_p", "Creatinine (mg/dL), if not on dialysis", min = 0.5, max = 4.0, value = 1.0)
+selectInput("amb_p", "Ambulation Status",
 						   choices = list("Independent" =      0,
 						 						     	"With Assistance" =  1,
 						 							    "Wheelchair bound" = 2,
 						 							    "Bedbound" =         3))
-radioButtons("statin_p", "Pre-opreative medications: Statin",
-						   choices = list("No" =  0,
-						 							    "Yes" = 1))
+selectInput("preopmeds_p", "Preop Medications",
+									 choices = list("Beta blocker" = 1,
+									 							 "Antiplatelet" = 2,
+									 							 "Statin" = 3),
+						multiple = TRUE)
 ```
 
 Row
 ----------------------------------------------------------
+
+### 30d Mortality after infrainguinal revascularization
+
+```{r}
+clti_mort_30 = reactive({
+	  age_1 = ifelse(input$age_p >= 60 & input$age_a <= 70, 1, 0)
+	  age_2 = ifelse(input$age_p > 70 & input$age_a <= 80, 1, 0)
+  	age_3 = ifelse(input$age_p > 80, 1, 0)
+		race_1 = ifelse(input$race_p > 0, 1, 0)
+		indication_1 = ifelse(input$indication_p == 1, 1, 0)
+		tob_1 = ifelse(input$tob_p == 1, 1, 0)
+		tob_2 = ifelse(input$tob_p == 2, 1, 0)
+		cad_1 = ifelse(input$cad_p == 1, 1, 0)
+		cad_2 = ifelse(input$cad_p == 2, 1, 0)
+		chf_1 = ifelse(input$chf_p == 1, 1, 0)
+		copd_1 = ifelse(input$copd_p == 1, 1, 0)
+		copd_2 = ifelse(input$copd_p == 2, 1, 0)
+		egfr = egfr.ckdepi (creatinine = input$cr_p, age = input$age_p, sex = input$sex_p, ethnicity = input$race_p, 
+												creatinine_units = "mg/dl", label_afroamerican = c ("1"), label_sex_male = c ("0"), 
+												label_sex_female = c ("1")) 
+		ckd_1 = ifelse((egfr >= 60 & egfr < 90) & input$esrd_p == 0, 1, 0)
+		ckd_2 = ifelse((egfr >= 30 & egfr < 60) & input$esrd_p == 0, 1, 0)
+		ckd_3 = ifelse((egfr >= 15 & egfr < 30) & input$esrd_p == 0, 1, 0)
+		ckd_4 = ifelse(egfr < 15 | input$esrd_p == 1, 1, 0)
+		amb_1 = ifelse(input$amb_p == 1, 1, 0)
+		amb_2 = ifelse(input$amb_p == 2, 1, 0)
+		amb_3 = ifelse(input$amb_p == 3, 1, 0)
+		statin_1 = ifelse(3 %in% input$preopmeds_p, 1, 0)
+		# Guessed at intercept - reported in paper that baseline was 99.7%
+		clti_term_30 = -5.9 + age_1*0.51 + age_2*0.97 + age_3*1.5 + race_1*-0.38 + indication_1*0.42 + cad_1*0.25 + 
+			cad_2*0.78 + chf_1*0.53 + copd_1*0.27 + copd_2*0.86 + ckd_1*-0.05 + ckd_2*0.26 + ckd_3*0.76 + ckd_4*1.45 +
+			amb_1*0.41 + amb_2*0.60 + amb_3*1.34 + statin_1*-0.29
+		clti_mort_30 = round(
+			1/(1+exp(-clti_term_30)),
+			3)
+	return(clti_mort_30)
+})
+
+renderValueBox({
+  clti_mort_30_numb <- as.numeric(clti_mort_30())
+  clti_mort_30 = ifelse(1 %in% input$dzlevel_p, "Unable to calculate", 
+    						scales::percent(clti_mort_30(), accuracy = 0.1))
+  valueBox(
+    value = clti_mort_30,
+    icon = "fa-skull",
+    color = ifelse(1 %in% input$dzlevel_p, "grey",
+    							 ifelse(clti_mort_30_numb > 0.1, "red", 
+    										ifelse(clti_mort_30_numb > 0.05, "orange", "green")))
+  )
+})
+```
+
+### 2y Mortality after infrainguinal revascularization
+
+```{r}
+clti_mort_2y = reactive({
+	  age_1 = ifelse(input$age_p >= 60 & input$age_a <= 70, 1, 0)
+	  age_2 = ifelse(input$age_p > 70 & input$age_a <= 80, 1, 0)
+  	age_3 = ifelse(input$age_p > 80, 1, 0)
+		race_1 = ifelse(input$race_p > 0, 1, 0)
+		indication_1 = ifelse(input$indication_p == 1, 1, 0)
+		tob_1 = ifelse(input$tob_p == 1, 1, 0)
+		tob_2 = ifelse(input$tob_p == 2, 1, 0)
+		cad_1 = ifelse(input$cad_p == 1, 1, 0)
+		cad_2 = ifelse(input$cad_p == 2, 1, 0)
+		chf_1 = ifelse(input$chf_p == 1, 1, 0)
+		copd_1 = ifelse(input$copd_p == 1, 1, 0)
+		copd_2 = ifelse(input$copd_p == 2, 1, 0)
+		egfr = egfr.ckdepi (creatinine = input$cr_p, age = input$age_p, sex = input$sex_p, ethnicity = input$race_p, 
+												creatinine_units = "mg/dl", label_afroamerican = c ("1"), label_sex_male = c ("0"), 
+												label_sex_female = c ("1")) 
+		ckd_1 = ifelse((egfr >= 60 & egfr < 90) & input$esrd_p == 0, 1, 0)
+		ckd_2 = ifelse((egfr >= 30 & egfr < 60) & input$esrd_p == 0, 1, 0)
+		ckd_3 = ifelse((egfr >= 15 & egfr < 30) & input$esrd_p == 0, 1, 0)
+		ckd_4 = ifelse(egfr < 15 | input$esrd_p == 1, 1, 0)
+		amb_1 = ifelse(input$amb_p == 1, 1, 0)
+		amb_2 = ifelse(input$amb_p == 2, 1, 0)
+		amb_3 = ifelse(input$amb_p == 3, 1, 0)
+		betablock_1 = ifelse(1 %in% input$preopmeds_p, 1, 0)
+		antiplat_1 = ifelse(2 %in% input$preopmeds_p, 1, 0)
+		statin_1 = ifelse(3 %in% input$preopmeds_p, 1, 0)
+		# Guessed at intercept - reported in paper that baseline was 95.2%
+		clti_term_2y = -2.98 + age_1*0.32 + age_2*0.68 + age_3*1.17 + race_1*-0.25 + indication_1*0.43 + tob_1*0.09 +
+			tob_2*0.11 + cad_1*0.18 + cad_2*0.31 + chf_1*0.49 + copd_1*0.24 + copd_2*0.52 + ckd_1*-0.02 + ckd_2*0.22 +
+			ckd_3*0.64 + ckd_4*1.09 + amb_1*0.33 + amb_2*0.52 + amb_3*0.91 + betablock_1*0.12 + antiplat_1*-0.13 + 
+			statin_1*-0.12
+		clti_mort_2y = round(
+			1/(1+exp(-clti_term_2y)),
+			3)
+	return(clti_mort_2y)
+})
+
+renderValueBox({
+  clti_mort_2y_numb <- as.numeric(clti_mort_2y())
+  clti_mort_2y = ifelse(1 %in% input$dzlevel_p, "Unable to calculate", 
+    						scales::percent(clti_mort_2y(), accuracy = 0.1))
+  valueBox(
+    value = clti_mort_2y,
+    icon = "fa-skull",
+    color = ifelse(1 %in% input$dzlevel_p, "grey",
+    							 ifelse(clti_mort_2y_numb > 0.1, "red", 
+    										ifelse(clti_mort_2y_numb > 0.05, "orange", "green")))
+  )
+})
+```
+
+Row
+-------------------------------------------------------------------------------
+
+Simons, Jessica, Andres Schanzer, Julie Flahive, Nicholas Osborne, Joseph Mills, Andrew Bradbury, and Michael Conte. “Survival Prediction in Patients with Chronic Limb-Threatening Ischemia Who Undergo Infrainguinal Revascularization.” European Journal of Vascular and Endovascular Surgery 58 (2019): S120–34. https://doi.org/10.1016/j.ejvs.2019.04.009.
+
+Row
+-------------------------------------------------------------------------------
+
+### Revascularization POMI
+
+```{r}
+p_pomi = reactive({
+	age_1 = ifelse(input$age_p >= 60 & input$age_p < 70, 1, 0)
+	age_2 = ifelse(input$age_p >= 70 & input$age_p < 80, 1, 0)
+	age_3 = ifelse(input$age_p >= 80, 1, 0)
+	ckd_1 = ifelse(input$cr_p > 1.8 & input$esrd_p != 1, 1, 0)
+	ckd_2 = ifelse(input$esrd_p == 1, 1, 0)
+	stress_1 = ifelse(input$stress_p == 1, 1, 0)
+	stress_2 = ifelse(input$stress_p == 2, 1, 0)
+	cad_1 = ifelse(input$cad_p == 1, 1, 0)
+	cad_2 = ifelse(input$cad_p == 2, 1, 0)
+	dm_1 = ifelse(input$dm_p == 1, 1, 0)
+	dm_2 = ifelse(input$dm_p == 2, 1, 0)
+	dm_3 = ifelse(input$dm_p == 3, 1, 0)
+	chf_1 = ifelse(input$chf_p == 1, 1, 0)
+	chf_2 = ifelse(input$chf_p == 2, 1, 0)
+	proc = ifelse(1 %in% input$dzlevel_p, 1, 0)
+	proc_1 = ifelse(proc == 0, 1, 0)
+	proc_2 = ifelse(proc == 1, 1, 0)
+	p_pomi_term = -5.82 + 1.12*proc_1 + 1.60*proc_2 + 0.44*age_1 + 0.64*age_2 + 1.10*age_3 + 0.76*ckd_1 + 0.64*ckd_2 + 
+	  -0.15*stress_1 + 0.46*stress_2 + 0.40*cad_1 + 0.76*cad_2 + 0.18*dm_1 + 0.20*dm_2 + 0.39*dm_3 + 0.44*chf_1 + 
+		0.50*chf_2
+	p_pomi = round(
+		1/(1+exp(-p_pomi_term)),
+		3)
+	return(p_pomi)
+})
+
+renderValueBox({
+  p_pomi_numb <- as.numeric(p_pomi())
+  valueBox(
+    value = scales::percent(p_pomi(), accuracy = 0.1),
+     icon = "fa-heartbeat",
+    color = ifelse(p_pomi_numb > 0.1, "red", 
+    							 ifelse(p_pomi_numb > 0.05, "orange", "green"))
+  )
+})
+```
+
+Row
+-------------------------------------------------------------------------------
+
+Bertges, Daniel J., Dan Neal, Andres Schanzer, Salvatore T. Scali, Philip P. Goodney, Jens Eldrup-Jorgensen, and Jack L. Cronenwett. “The Vascular Quality Initiative Cardiac Risk Index for Prediction of Myocardial Infarction after Vascular Surgery.” Journal of Vascular Surgery 64, no. 5 (November 2016): 1411-1421.e4. https://doi.org/10.1016/j.jvs.2016.04.045.
+
+Row
+-------------------------------------------------------------------------------
+
 
 Carotid
 ==============================================================================
