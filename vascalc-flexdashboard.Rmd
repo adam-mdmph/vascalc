@@ -312,6 +312,8 @@ selectInput("preopmeds_p", "Preop Medications",
 						multiple = TRUE)
 ```
 
+[More Guidance about Input Variables](https://adam-mdmph.github.io/Risk-Prediction-Text/clti.html#input-variables-1)
+
 Row
 ----------------------------------------------------------
 
@@ -543,6 +545,8 @@ selectInput("esrd_c", "ESRD on Dialysis",
 						 							 "Yes" = 1))
 sliderInput("ckd_c", "Creatinine (mg/dL), not on dialysis", min = 0.5, max = 4.0, value = 1.0)
 ```
+
+[More Guidance about Input Variables](https://adam-mdmph.github.io/Risk-Prediction-Text/carotid.html#input-variables-2)
 
 Row
 -------------------------------------------------------------------------------
