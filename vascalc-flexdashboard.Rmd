@@ -27,9 +27,12 @@ selectInput("sex_a", "Patient Sex",
  						 choices = list("Male" = 0,
  						 							 "Female" = 1))
 sliderInput("diam_a", "Maximal Aorta Diameter", min = 30, max = 100, value = 55)
-selectInput("renalclamp_a", "Suprarenal clamp?",
+selectInput("renalclamp_a", "Do you expect to clamp above both renals?",
 						 choices = list("Unlikely" = 0,
 						 							 "Likely" = 1))
+selectInput("prioraorta_a", "Has the patient had prior aortic surgery?",
+						choices = list("No" = 0,
+													 "Yes" = 1))
 selectInput("cad_a", "History of coronary artery disease",
   						 choices = list("None" =                                         0,
   						 							 "History of MI, asymptomatic or stable angina" = 1,
@@ -90,15 +93,15 @@ renderValueBox({
 Row
 --------------------------------------------------------------------------------
 
-Tracci MC, Roy RR, Upchurch GR. "Aortoiliac Aneurysms: Evaluation, Decision Making, and Medical Management." Rutherford's Vascular Surgery and Endovascular Therapy. 9th Ed. Edited by Sidway AN and Perler BA. 2019.  Chapter 70, 884-893.e3
+[Where did these numbers come from?](https://adam-mdmph.github.io/Risk-Prediction-Text/aaa.html#annual-rupture-risk)
 
 Row
 -----------------------------------------------
 
-### EVAR 30d Mortality
+### EVAR In-hospital Mortality
 
 ```{r}
-evar_mort_30 = reactive({
+evar_mort_hosp = reactive({
 	age_1 = ifelse(input$age_a > 75, 1, 0)
 	sex_1 = ifelse(input$sex_a == 1, 1, 0)
 	cad_1 = ifelse(input$cad_a > 0, 1, 0)
@@ -109,27 +112,31 @@ evar_mort_30 = reactive({
 	diam_1 = ifelse(input$diam_a > 65, 1, 0)
 	evar_term = -6.76 + 0.78*age_1 + 0.69*sex_1 + 0.56*cad_1 + 0.71*cvd_1 + 0.95*copd_1 + 
 		0.89*ckd_1 + 1.31*ckd_2 + 0.91*diam_1
-	evar_mort_30 = round(
+	evar_mort_hosp = round(
 		1/(1+exp(-evar_term)),
 		3)
-	return(evar_mort_30)
+	return(evar_mort_hosp)
 })
 
 renderValueBox({
-  evar_mort_30_numb <- as.numeric(evar_mort_30())
+  evar_mort_hosp_numb <- as.numeric(evar_mort_hosp())
+  evar_mort_hosp = ifelse(input$prioraorta_a == 1, "Unable to calculate", 
+    						scales::percent(evar_mort_hosp(), accuracy = 0.1))
   valueBox(
-    value = scales::percent(evar_mort_30(), accuracy = 0.1),
+    value = evar_mort_hosp,
     icon = "fa-syringe",
-    color = ifelse(evar_mort_30_numb > 0.1, "red", 
-    							 ifelse(evar_mort_30_numb > 0.05, "orange", "green"))
+    color = ifelse(input$prioraorta_a == 1, "grey",
+    							 ifelse(evar_mort_hosp_numb > 0.3, "black", 
+    							 ifelse(evar_mort_hosp_numb > 0.08, "red", 
+    							 			 ifelse(evar_mort_hosp_numb > 0.01, "orange", "green"))))
   )
 })
 ```
 
-### Open AAA 30d Mortality
+### Open AAA In-hospital Mortality
 
 ```{r}
-open_mort_30 = reactive({
+open_mort_hosp = reactive({
 	age_1 = ifelse(input$age_a > 75, 1, 0)
 	sex_1 = ifelse(input$sex_a == 1, 1, 0)
 	cad_1 = ifelse(input$cad_a > 0, 1, 0)
@@ -142,26 +149,30 @@ open_mort_30 = reactive({
 	renalclamp_2 = ifelse(input$renalclamp_a == 2, 1, 0)
 	open_term = -6.76 + 0.78*age_1 + 0.69*sex_1 + 0.56*cad_1 + 0.71*cvd_1 + 0.95*copd_1 + 
 		0.89*ckd_1 + 1.31*ckd_2 + 0.91*diam_1 + 1.08*renalclamp_1 + 1.905*renalclamp_2
-	open_mort_30 = round(
+	open_mort_hosp = round(
 		1/(1+exp(-open_term)),
 		3)
-	return(open_mort_30)
+	return(open_mort_hosp)
 })
 
 renderValueBox({
-  open_mort_30_numb <- as.numeric(open_mort_30())
+  open_mort_hosp_numb <- as.numeric(open_mort_hosp())
+  open_mort_hosp = ifelse(input$prioraorta_a == 1, "Unable to calculate", 
+    						scales::percent(open_mort_hosp(), accuracy = 0.1))
   valueBox(
-    value = scales::percent(open_mort_30(), accuracy = 0.1),
+    value = open_mort_hosp,
     icon = "fa-user-ninja",
-    color = ifelse(open_mort_30_numb < 0.1, "green", 
-    							 ifelse(open_mort_30_numb < 0.05, "orange", "red"))
+    color = ifelse(input$prioraorta_a == 1, "grey",
+    							 ifelse(open_mort_hosp_numb > 0.3, "black", 
+    							 ifelse(open_mort_hosp_numb > 0.08, "red", 
+    							 			 ifelse(open_mort_hosp_numb > 0.01, "orange", "green"))))
   )
 })
 ```
 
 Row
 -------------------------------------------------------------------------------
-Eslami, Mohammad H., Denis Rybin, Gheorghe Doros, Jeffrey A. Kalish, and Alik Farber. “Comparison of a Vascular Study Group of New England Risk Prediction Model with Established Risk Prediction Models of In-Hospital Mortality after Elective Abdominal Aortic Aneurysm Repair.” Journal of Vascular Surgery 62, no. 5 (November 2015): 1125-1133.e2. https://doi.org/10.1016/j.jvs.2015.06.051.
+[Where did these numbers come from?](https://adam-mdmph.github.io/Risk-Prediction-Text/aaa.html#in-hospital-postprocedural-mortality)
 
 Row
 -------------------------------------------------------------------------------
