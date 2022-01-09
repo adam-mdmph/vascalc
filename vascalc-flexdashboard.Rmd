@@ -333,8 +333,9 @@ clti_mort_30 = reactive({
 		chf_1 = ifelse(input$chf_p == 1, 1, 0)
 		copd_1 = ifelse(input$copd_p == 1, 1, 0)
 		copd_2 = ifelse(input$copd_p == 2, 1, 0)
-		egfr = egfr.ckdepi (creatinine = input$cr_p, age = input$age_p, sex = input$sex_p, ethnicity = input$race_p, 
-												creatinine_units = "mg/dl", label_afroamerican = c ("1"), label_sex_male = c ("0"), 
+		egfr = egfr.ckdepi (creatinine = input$cr_p, age = input$age_p, sex = input$sex_p, 
+												ethnicity = input$race_p, creatinine_units = "mg/dl", 
+												label_afroamerican = c ("1"), label_sex_male = c ("0"), 
 												label_sex_female = c ("1")) 
 		ckd_1 = ifelse((egfr >= 60 & egfr < 90) & input$esrd_p == 0, 1, 0)
 		ckd_2 = ifelse((egfr >= 30 & egfr < 60) & input$esrd_p == 0, 1, 0)
@@ -344,12 +345,11 @@ clti_mort_30 = reactive({
 		amb_2 = ifelse(input$amb_p == 2, 1, 0)
 		amb_3 = ifelse(input$amb_p == 3, 1, 0)
 		statin_1 = ifelse(3 %in% input$preopmeds_p, 1, 0)
-		# Guessed at intercept - reported in paper that baseline was 99.7%
-		clti_term_30 = -5.9 + age_1*0.51 + age_2*0.97 + age_3*1.5 + race_1*-0.38 + indication_1*0.42 + cad_1*0.25 + 
+		clti_term_30 = age_1*0.51 + age_2*0.97 + age_3*1.5 + race_1*-0.38 + indication_1*0.42 + cad_1*0.25 + 
 			cad_2*0.78 + chf_1*0.53 + copd_1*0.27 + copd_2*0.86 + ckd_1*-0.05 + ckd_2*0.26 + ckd_3*0.76 + ckd_4*1.45 +
 			amb_1*0.41 + amb_2*0.60 + amb_3*1.34 + statin_1*-0.29
 		clti_mort_30 = round(
-			1/(1+exp(-clti_term_30)),
+			(1-0.997^(exp(clti_term_30))),
 			3)
 	return(clti_mort_30)
 })
@@ -397,13 +397,12 @@ clti_mort_2y = reactive({
 		betablock_1 = ifelse(1 %in% input$preopmeds_p, 1, 0)
 		antiplat_1 = ifelse(2 %in% input$preopmeds_p, 1, 0)
 		statin_1 = ifelse(3 %in% input$preopmeds_p, 1, 0)
-		# Guessed at intercept - reported in paper that baseline was 95.2%
-		clti_term_2y = -2.98 + age_1*0.32 + age_2*0.68 + age_3*1.17 + race_1*-0.25 + indication_1*0.43 + tob_1*0.09 +
+		clti_term_2y = age_1*0.32 + age_2*0.68 + age_3*1.17 + race_1*-0.25 + indication_1*0.43 + tob_1*0.09 +
 			tob_2*0.11 + cad_1*0.18 + cad_2*0.31 + chf_1*0.49 + copd_1*0.24 + copd_2*0.52 + ckd_1*-0.02 + ckd_2*0.22 +
 			ckd_3*0.64 + ckd_4*1.09 + amb_1*0.33 + amb_2*0.52 + amb_3*0.91 + betablock_1*0.12 + antiplat_1*-0.13 + 
 			statin_1*-0.12
 		clti_mort_2y = round(
-			1/(1+exp(-clti_term_2y)),
+			(1-0.952^(exp(clti_term_2y))),
 			3)
 	return(clti_mort_2y)
 })
