@@ -14,7 +14,7 @@ library(scales)
 library(kidney.epi)
 ```
 
-eAAA
+AAA
 =======================================================================
 
 Inputs {.sidebar}
@@ -27,6 +27,10 @@ selectInput("sex_a", "Patient Sex",
  						 choices = list("Male" = 0,
  						 							 "Female" = 1))
 sliderInput("diam_a", "Maximal Aorta Diameter", min = 30, max = 100, value = 55)
+selectInput("symp_a", "Patient Symptoms",
+						choices = list("Asymptomatic" = 0,
+													 "Sympomatic" = 1,
+													 "Ruptured" = 2))
 selectInput("renalclamp_a", "Do you expect to clamp above both renals?",
 						 choices = list("Unlikely" = 0,
 						 							 "Likely" = 1))
@@ -80,12 +84,15 @@ rupture_risk = reactive({
 })
 
 renderValueBox({
-  valueBox(
-    value = rupture_risk(),
+  rupture_risk = ifelse(input$symp_a > 0, "Unable to calculate", 
+    						rupture_risk())
+	valueBox(
+    value = rupture_risk,
     icon = "fa-bomb",
-    color = ifelse(input$diam_a < 40, "green",
+    color = ifelse(input$symp_a > 0, "grey",
+    							 ifelse(input$diam_a < 40, "green",
 												ifelse(input$diam_a < 50, "green",
-															 ifelse(input$diam_a < 60, "orange", "red")))
+															 ifelse(input$diam_a < 60, "orange", "red"))))
   )
 })
 ```
@@ -120,12 +127,12 @@ evar_mort_hosp = reactive({
 
 renderValueBox({
   evar_mort_hosp_numb <- as.numeric(evar_mort_hosp())
-  evar_mort_hosp = ifelse(input$prioraorta_a == 1, "Unable to calculate", 
+  evar_mort_hosp = ifelse((input$prioraorta_a == 1 | input$symp_a > 0), "Unable to calculate", 
     						scales::percent(evar_mort_hosp(), accuracy = 0.1))
   valueBox(
     value = evar_mort_hosp,
     icon = "fa-syringe",
-    color = ifelse(input$prioraorta_a == 1, "grey",
+    color = ifelse((input$prioraorta_a == 1 | input$symp_a > 0), "grey",
     							 ifelse(evar_mort_hosp_numb > 0.3, "black", 
     							 ifelse(evar_mort_hosp_numb > 0.08, "red", 
     							 			 ifelse(evar_mort_hosp_numb > 0.01, "orange", "green"))))
@@ -157,12 +164,12 @@ open_mort_hosp = reactive({
 
 renderValueBox({
   open_mort_hosp_numb <- as.numeric(open_mort_hosp())
-  open_mort_hosp = ifelse(input$prioraorta_a == 1, "Unable to calculate", 
+  open_mort_hosp = ifelse((input$prioraorta_a == 1 | input$symp_a > 0), "Unable to calculate", 
     						scales::percent(open_mort_hosp(), accuracy = 0.1))
   valueBox(
     value = open_mort_hosp,
     icon = "fa-user-ninja",
-    color = ifelse(input$prioraorta_a == 1, "grey",
+    color = ifelse((input$prioraorta_a == 1 | input$symp_a  > 0), "grey",
     							 ifelse(open_mort_hosp_numb > 0.3, "black", 
     							 ifelse(open_mort_hosp_numb > 0.08, "red", 
     							 			 ifelse(open_mort_hosp_numb > 0.01, "orange", "green"))))
@@ -206,11 +213,14 @@ evar_pomi = reactive({
 
 renderValueBox({
   evar_pomi_numb <- as.numeric(evar_pomi())
+  evar_pomi = ifelse((input$prioraorta_a == 1 | input$symp_a == 2), "Unable to calculate", 
+    						scales::percent(evar_pomi(), accuracy = 0.1))
   valueBox(
-    value = scales::percent(evar_pomi(), accuracy = 0.1),
+    value = evar_pomi,
      icon = "fa-heartbeat",
-    color = ifelse(evar_pomi_numb > 0.1, "red", 
-    							 ifelse(evar_pomi_numb > 0.05, "orange", "green"))
+    color = ifelse((input$prioraorta_a == 1 | input$symp_a == 2), "grey",
+    							 ifelse(evar_pomi_numb > 0.1, "red", 
+    							 ifelse(evar_pomi_numb > 0.05, "orange", "green")))
   )
 })
 ```
@@ -244,11 +254,14 @@ open_pomi = reactive({
 
 renderValueBox({
   open_pomi_numb <- as.numeric(open_pomi())
+  open_pomi = ifelse((input$prioraorta_a == 1 | input$symp_a == 2), "Unable to calculate", 
+    						scales::percent(open_pomi(), accuracy = 0.1))
   valueBox(
-    value = scales::percent(open_pomi(), accuracy = 0.1),
+    value = open_pomi,
      icon = "fa-heartbeat",
-    color = ifelse(open_pomi_numb > 0.1, "red", 
-    							 ifelse(open_pomi_numb > 0.05, "orange", "green"))
+    color = ifelse((input$prioraorta_a == 1 | input$symp_a == 2), "grey",
+    							 ifelse(open_pomi_numb > 0.1, "red", 
+    							 ifelse(open_pomi_numb > 0.05, "orange", "green")))
   )
 })
 ```
@@ -256,7 +269,7 @@ renderValueBox({
 Row
 -------------------------------------------------------------------------------
 
-Bertges, Daniel J., Dan Neal, Andres Schanzer, Salvatore T. Scali, Philip P. Goodney, Jens Eldrup-Jorgensen, and Jack L. Cronenwett. “The Vascular Quality Initiative Cardiac Risk Index for Prediction of Myocardial Infarction after Vascular Surgery.” Journal of Vascular Surgery 64, no. 5 (November 2016): 1411-1421.e4. https://doi.org/10.1016/j.jvs.2016.04.045.
+[Where did these numbers come from?](https://adam-mdmph.github.io/Risk-Prediction-Text/aaa.html#post-operative-myocardial-infarcation)
 
 CLTI
 ===============================================================================
