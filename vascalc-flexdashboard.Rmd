@@ -269,7 +269,7 @@ renderValueBox({
 Row
 -------------------------------------------------------------------------------
 
-[Where did these numbers come from?](https://adam-mdmph.github.io/Risk-Prediction-Text/aaa.html#post-operative-myocardial-infarcation)
+[Where did these numbers come from?](https://adam-mdmph.github.io/Risk-Prediction-Text/aaa.html#post-operative-in-hospital-myocardial-infarction)
 
 CLTI
 ===============================================================================
